@@ -3,4 +3,8 @@ project(PopProject C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(PopProject main.c)
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIR})
+
+add_executable(PopProject main.c modules/welcome.c)
+target_link_libraries(PopProject ${CURSES_LIBRARIES})
