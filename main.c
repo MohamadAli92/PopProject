@@ -9,10 +9,10 @@ int main() {
 
     clear();
     refresh();
-    curs_set(1);
 
-    if (!program_mode)
-        printf("Create New Form");
+    if (!program_mode){
+        create();
+    }
     else
         printf("Manage Forms");
 

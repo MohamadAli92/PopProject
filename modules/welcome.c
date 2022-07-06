@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <ncurses.h>
 
@@ -26,8 +27,7 @@ int welcome_screen(){
     mvwprintw(select_win, 2, 7, "Create New Form");
     mvwprintw(select_win, 4, 9, "Manage Forms");
 
-    char choices[2][15] = {"Create New Form", "Manage Forms"};
-    int choice = 0;
+    int choice;
     int highlight = 0;
     keypad(select_win, true);
 
@@ -61,6 +61,7 @@ int welcome_screen(){
         if (choice == '\n') break;
     }
 
+    keypad(select_win, false);
     return highlight;
 //    wrefresh(select_win);
 //    touchwin(select_win);
