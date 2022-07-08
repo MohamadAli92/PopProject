@@ -74,31 +74,37 @@ build cmake_object_order_depends_target_PopProject: phony || CMakeFiles/PopProje
 
 build CMakeFiles/PopProject.dir/main.c.o: C_COMPILER__PopProject_Debug /home/aiwnsjjw/Documents/PopProject/main.c || cmake_object_order_depends_target_PopProject
   DEP_FILE = CMakeFiles/PopProject.dir/main.c.o.d
-  FLAGS = -g -std=gnu99
+  FLAGS = -g   -g -std=gnu99
   OBJECT_DIR = CMakeFiles/PopProject.dir
   OBJECT_FILE_DIR = CMakeFiles/PopProject.dir
 
 build CMakeFiles/PopProject.dir/modules/welcome.c.o: C_COMPILER__PopProject_Debug /home/aiwnsjjw/Documents/PopProject/modules/welcome.c || cmake_object_order_depends_target_PopProject
   DEP_FILE = CMakeFiles/PopProject.dir/modules/welcome.c.o.d
-  FLAGS = -g -std=gnu99
+  FLAGS = -g   -g -std=gnu99
   OBJECT_DIR = CMakeFiles/PopProject.dir
   OBJECT_FILE_DIR = CMakeFiles/PopProject.dir/modules
 
 build CMakeFiles/PopProject.dir/modules/create.c.o: C_COMPILER__PopProject_Debug /home/aiwnsjjw/Documents/PopProject/modules/create.c || cmake_object_order_depends_target_PopProject
   DEP_FILE = CMakeFiles/PopProject.dir/modules/create.c.o.d
-  FLAGS = -g -std=gnu99
+  FLAGS = -g   -g -std=gnu99
   OBJECT_DIR = CMakeFiles/PopProject.dir
   OBJECT_FILE_DIR = CMakeFiles/PopProject.dir/modules
 
 build CMakeFiles/PopProject.dir/modules/manage.c.o: C_COMPILER__PopProject_Debug /home/aiwnsjjw/Documents/PopProject/modules/manage.c || cmake_object_order_depends_target_PopProject
   DEP_FILE = CMakeFiles/PopProject.dir/modules/manage.c.o.d
-  FLAGS = -g -std=gnu99
+  FLAGS = -g   -g -std=gnu99
   OBJECT_DIR = CMakeFiles/PopProject.dir
   OBJECT_FILE_DIR = CMakeFiles/PopProject.dir/modules
 
 build CMakeFiles/PopProject.dir/modules/utilities.c.o: C_COMPILER__PopProject_Debug /home/aiwnsjjw/Documents/PopProject/modules/utilities.c || cmake_object_order_depends_target_PopProject
   DEP_FILE = CMakeFiles/PopProject.dir/modules/utilities.c.o.d
-  FLAGS = -g -std=gnu99
+  FLAGS = -g   -g -std=gnu99
+  OBJECT_DIR = CMakeFiles/PopProject.dir
+  OBJECT_FILE_DIR = CMakeFiles/PopProject.dir/modules
+
+build CMakeFiles/PopProject.dir/modules/create_utilities.c.o: C_COMPILER__PopProject_Debug /home/aiwnsjjw/Documents/PopProject/modules/create_utilities.c || cmake_object_order_depends_target_PopProject
+  DEP_FILE = CMakeFiles/PopProject.dir/modules/create_utilities.c.o.d
+  FLAGS = -g   -g -std=gnu99
   OBJECT_DIR = CMakeFiles/PopProject.dir
   OBJECT_FILE_DIR = CMakeFiles/PopProject.dir/modules
 
@@ -110,7 +116,7 @@ build CMakeFiles/PopProject.dir/modules/utilities.c.o: C_COMPILER__PopProject_De
 #############################################
 # Link the executable PopProject
 
-build PopProject: C_EXECUTABLE_LINKER__PopProject_Debug CMakeFiles/PopProject.dir/main.c.o CMakeFiles/PopProject.dir/modules/welcome.c.o CMakeFiles/PopProject.dir/modules/create.c.o CMakeFiles/PopProject.dir/modules/manage.c.o CMakeFiles/PopProject.dir/modules/utilities.c.o | /usr/lib/libcurses.so /usr/lib/libform.so
+build PopProject: C_EXECUTABLE_LINKER__PopProject_Debug CMakeFiles/PopProject.dir/main.c.o CMakeFiles/PopProject.dir/modules/welcome.c.o CMakeFiles/PopProject.dir/modules/create.c.o CMakeFiles/PopProject.dir/modules/manage.c.o CMakeFiles/PopProject.dir/modules/utilities.c.o CMakeFiles/PopProject.dir/modules/create_utilities.c.o | /usr/lib/libcurses.so /usr/lib/libform.so
   FLAGS = -g
   LINK_LIBRARIES = -lcurses  -lform
   OBJECT_DIR = CMakeFiles/PopProject.dir
