@@ -16,14 +16,6 @@ int components_n = 0;
 int n_point = 0;
 
 
-void clear_window(WINDOW *win, char text[]){
-    wclear(win);
-    wattron(win, A_BOLD);
-    mvwprintw(win, 0, 0, "%s", text);
-    wattroff(win, A_BOLD);
-    wrefresh(win);
-}
-
 void make_new_file(WINDOW *win){
     char file_name[100];
     curs_set(1);
@@ -56,7 +48,7 @@ void make_new_file(WINDOW *win){
             echo();
             mvwprintw(win, 0, 0, "Please enter the name of form (maximum 100 character) : ");
             wgetstr(win, file_name);
-            strcat(file_name, ".json");
+            strcat(file_name, ".txt");
             sprintf(file_address, "FormsTemplates/%s", file_name);
             fp = fopen(file_address, "rb+");
         }
@@ -114,8 +106,6 @@ void put_component_on_view(int type, component created_component, WINDOW *win){
 }
 
 int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13], int points[][2]){
-
-    components = malloc(100 * sizeof(component));
 
     int confirmed_component = 0;
     component created_component;
@@ -178,6 +168,11 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
             created_component.checked = -1;
             created_component.height = -1;
             created_component.width = -1;
+            if (option == 1)
+                // Button
+                created_component.checked = -5;
+                // Label
+            else created_component.checked = -1;
 
             mvwprintw(command, 0, 0, "label : %s | x_pos : %d | y_pos : %d", created_component.label_text, created_component.x_pos, created_component.y_pos);
 
@@ -252,8 +247,11 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
 
 
     // Add component to the array
-    components[components_n] = created_component;
-    components_n++;
+    if (option != 4){
+        components[components_n] = created_component;
+        components_n++;
+    }
+
 
     wrefresh(command);
 
@@ -310,6 +308,7 @@ void create(){
     int end = 0;
     char choices[5][13] = {"|TextBox|", "|Button|", "|Check Box|", "|Label|", "|Exit|"};
 
+    components = malloc(100 * sizeof(component));
 
     while (!end){
         clear_window(command, "\0");

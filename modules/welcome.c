@@ -20,12 +20,14 @@ int welcome_screen(){
 
     refresh();
 
-    WINDOW * select_win = newwin(7, 30, (max_y/2)-4, (max_x/2)-14);
+    WINDOW * select_win = newwin(9, 30, (max_y/2)-4, (max_x/2)-14);
 
     box(select_win, '|', '-');
+    init_pair(1,COLOR_CYAN, A_NORMAL);
+    wbkgdset(select_win, COLOR_PAIR(1));
 
-    mvwprintw(select_win, 2, 7, "Create New Form");
-    mvwprintw(select_win, 4, 9, "Manage Forms");
+//    mvwprintw(select_win, 2, 7, "Create New Form");
+//    mvwprintw(select_win, 4, 9, "Manage Forms");
 
     int choice;
     int highlight = 0;
@@ -34,26 +36,46 @@ int welcome_screen(){
     while (1) {
         if (!highlight){
             wattron(select_win, A_REVERSE);
-            mvwprintw(select_win, 2, 7, "Create New Form");
+            mvwprintw(select_win, 1, 1, "Create New Form");
             wattroff(select_win, A_REVERSE);
-            mvwprintw(select_win, 4, 9, "Manage Forms");
-        } else {
-            mvwprintw(select_win, 2, 7, "Create New Form");
+            mvwprintw(select_win, 3, 1, "Manage Forms");
+            mvwprintw(select_win, 5, 1, "Edit Form");
+            mvwprintw(select_win, 7, 1, "Quit");
+        } else if (highlight == 1){
+            mvwprintw(select_win, 1, 1, "Create New Form");
             wattron(select_win, A_REVERSE);
-            mvwprintw(select_win, 4, 9, "Manage Forms");
+            mvwprintw(select_win, 3, 1, "Manage Forms");
+            wattroff(select_win, A_REVERSE);
+            mvwprintw(select_win, 5, 1, "Edit Form");
+            mvwprintw(select_win, 7, 1, "Quit");
+        } else if (highlight == 2){
+            mvwprintw(select_win, 1, 1, "Create New Form");
+            mvwprintw(select_win, 3, 1, "Manage Forms");
+            wattron(select_win, A_REVERSE);
+            mvwprintw(select_win, 5, 1, "Edit Form");
+            wattroff(select_win, A_REVERSE);
+            mvwprintw(select_win, 7, 1, "Quit");
+        } else if (highlight == 3){
+            mvwprintw(select_win, 1, 1, "Create New Form");
+            mvwprintw(select_win, 3, 1, "Manage Forms");
+            mvwprintw(select_win, 5, 1, "Edit Form");
+            wattron(select_win, A_REVERSE);
+            mvwprintw(select_win, 7, 1, "Quit");
             wattroff(select_win, A_REVERSE);
         }
+
+        wrefresh(select_win);
 
         choice = wgetch(select_win);
 
         switch (choice) {
             case KEY_UP:
                 highlight--;
-                if (highlight == -1) highlight = 1;
+                if (highlight == -1) highlight = 3;
                 break;
             case KEY_DOWN:
                 highlight++;
-                if (highlight == 2) highlight = 0;
+                if (highlight == 4) highlight = 0;
                 break;
             default:
                 break;
