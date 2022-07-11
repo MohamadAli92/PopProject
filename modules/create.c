@@ -1,6 +1,6 @@
 #include <ncurses.h>
 #include <string.h>
-#include <json-c/json.h>
+#include <stdlib.h>
 #include "header.h"
 #include <sys/stat.h>
 #include <unistd.h>

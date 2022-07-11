@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
+
 void show_component_properties(int component_idx, WINDOW *properties, component *components){
     char type;
     component showing_component = components[component_idx];
@@ -96,10 +97,11 @@ void show_component_properties(int component_idx, WINDOW *properties, component 
 }
 
 
-int select_from_components(int components_n, WINDOW *components_win, WINDOW *properties, component *components){
+int select_from_components(int components_n, WINDOW *components_win, WINDOW *properties, component *components, int *component_idx){
     int choice;
     int highlight = 0;
     keypad(components_win, true);
+
 
     int max_y_component, max_x_c;
 
@@ -134,7 +136,8 @@ int select_from_components(int components_n, WINDOW *components_win, WINDOW *pro
             wprintw(components_win, "%s\n", components[i].label_text);
             wattroff(components_win, A_REVERSE);
         }
-        show_component_properties(highlight, properties, components);
+        if (components_n > 0)
+            show_component_properties(highlight, properties, components);
         choice = wgetch(components_win);
 
         switch (choice) {
@@ -167,26 +170,27 @@ int select_from_components(int components_n, WINDOW *components_win, WINDOW *pro
         }
         if (choice == '\n'){
             break;
+        } else if (choice == KEY_BACKSPACE){
+            return 1;
         }
     }
 
     wrefresh(components_win);
     keypad(components_win, false);
 
-    return highlight;
+    *component_idx = highlight;
+    return 0;
 }
 
-int delete_component(WINDOW *command, component *components, int component_idx, int components_n){
+void delete_component(WINDOW *command, component *components, int component_idx, int components_n){
     for (int i = component_idx; i < components_n; ++i) {
         components[i] = components[i+1];
     }
-    return components_n-1;
 }
 
 void edit(int max_y, int max_x){
 
-
-    // initializing interface
+    echo();
 
     getmaxyx(stdscr, max_y, max_x);
 
@@ -199,50 +203,28 @@ void edit(int max_y, int max_x){
 
     refresh();
 
-    WINDOW *components_border = newwin(max_y-7, (max_x)/2, 3, 0);
-    WINDOW *components_win = newwin(max_y-9, (max_x/2)-2, 4, 1);
-
-    WINDOW *properties_border = newwin(max_y-7, max_x/2, 3, max_x/2);
-    WINDOW *properties = newwin(max_y-9 , (max_x/2)-2, 4, (max_x/2)+1);
 
     WINDOW *command_border = newwin(4, max_x, max_y-4, 0);
     WINDOW *command = newwin(2, max_x-2, max_y-3, 1);
+    box(command_border, '|', '-');
 
-
-//    box(components_border, 0, 0);
-    wborder(components_border, 0, '|', 0, '-', 0, 0, 0, 0);
-    wborder(properties_border, '|', 0, 0, '-', 0, 0, 0, 0);
-    wborder(command_border, 0, 0, '-', 0, 0, 0, 0, 0);
-
-    wattron(components_border, A_BOLD | A_REVERSE);
-    wattron(properties_border, A_BOLD | A_REVERSE);
-
-    mvwprintw(components_border, 0, 1, "Components: ");
-    mvwprintw(properties_border, 0, 1, "Properties: ");
-
-    wattroff(properties_border, A_BOLD | A_REVERSE);
-    wattroff(components_border, A_BOLD | A_REVERSE);
-
-    wrefresh(components_border);
-    wrefresh(components_win);
-    wrefresh(properties_border);
     wrefresh(command_border);
     wrefresh(command);
 
+    // Load File
+
     component *components = malloc(sizeof(component));
     int components_n;
-
-    int file_not_found = 1;
+    char* file_name = malloc(116 * sizeof(char));
 
     // open file
 
-    while (file_not_found){
+    while (1){
 
         // get file name from user
 
         curs_set(1);
         mvwprintw(command, 0, 0, "Please enter file name : ");
-        char* file_name = malloc(116 * sizeof(char));
         wscanw(command, "%s", file_name);
         strcat(file_name, ".txt");
 
@@ -274,7 +256,6 @@ void edit(int max_y, int max_x){
         }
 
         else {
-            file_not_found = 0;
             break;
         }
     }
@@ -286,11 +267,193 @@ void edit(int max_y, int max_x){
     wattroff(command, COLOR_PAIR(1));
     wrefresh(command);
     sleep(2);
-    clear_window(command, "Please select one of the components to delete.");
 
-    int component_idx = select_from_components(components_n, components_win, properties, components);
+    noecho();
 
-    components_n = delete_component(command, components, component_idx, components_n);
+    int choice = 0;
 
+    while (choice != 3){
+
+        clear_window(command, "Select one of these commands.");
+        char choices[4][19] = {"|Add Component|", "|Delete Component|", "|View Form|", "|Exit|"};
+
+        choice = get_choice(max_x, 19, choices, command, 4, 57, 1, 0);
+
+        if (choice == 2){
+
+            keypad(command, true);
+            clear_window(command, "Press Key Down to exit.");
+
+            WINDOW *view = newwin(max_y-11, max_x-2, 4, 1);
+            WINDOW *view_border = newwin(max_y-9, max_x, 3, 0);
+
+            box(view_border, '|', '-');
+
+            wrefresh(view_border);
+            wrefresh(view);
+
+            for (int i = 0; i < components_n; ++i) {
+                int type;
+                component showing_component = components[i];
+                // Button Or Label Or TextBox
+                if (showing_component.checked == -1){
+
+                    // Label
+                    if (showing_component.width == -1 || showing_component.height == -1)
+                        type = 3;
+
+                        // TextBox
+                    else
+                        type = 0;
+
+                    // Button
+                } else if (showing_component.checked == -5)
+                    type = 1;
+
+                    // CheckBox
+                else
+                    type = 2;
+
+                put_component_on_view(type, showing_component, view);
+
+            }
+
+
+            int exit = KEY_UP;
+            while (exit != KEY_DOWN){
+                exit = wgetch(command);
+            }
+
+
+            keypad(command, false);
+
+            clear_window(view_border, "");
+            clear_window(view, "");
+
+
+        } else if (choice == 1){
+            // Delete Component
+
+            clear_window(command, "|Delete|");
+
+            // initializing interface
+
+
+            WINDOW *components_border = newwin(max_y-7, (max_x)/2, 3, 0);
+            WINDOW *components_win = newwin(max_y-9, (max_x/2)-2, 4, 1);
+
+            WINDOW *properties_border = newwin(max_y-7, max_x/2, 3, max_x/2);
+            WINDOW *properties = newwin(max_y-9 , (max_x/2)-2, 4, (max_x/2)+1);
+
+
+            wborder(components_border, 0, '|', 0, '-', 0, 0, 0, 0);
+            wborder(properties_border, '|', 0, 0, '-', 0, 0, 0, 0);
+            wborder(command_border, 0, 0, '-', 0, 0, 0, 0, 0);
+
+            wattron(components_border, A_BOLD | A_REVERSE);
+            wattron(properties_border, A_BOLD | A_REVERSE);
+
+            mvwprintw(components_border, 0, 1, "Components: ");
+            mvwprintw(properties_border, 0, 1, "Properties: ");
+
+            wattroff(properties_border, A_BOLD | A_REVERSE);
+            wattroff(components_border, A_BOLD | A_REVERSE);
+
+            wrefresh(components_border);
+            wrefresh(components_win);
+            wrefresh(properties_border);
+            wrefresh(command_border);
+            wrefresh(command);
+
+            clear_window(command, "Please select one of the components to delete or press BackSpace to exit.");
+
+            while (components_n > 0){
+                int component_idx;
+                int end;
+                end = select_from_components(components_n, components_win, properties, components, &component_idx);
+                clear_window(components_win, "");
+                if (!end){
+                    delete_component(command, components, component_idx, components_n);
+                    components_n--;
+                }
+                else
+                    break;
+            }
+
+            if (!components_n){
+                clear_window(command, "There is no component to delete.");
+                sleep(2);
+            }
+
+
+            clear_window(components_win, "");
+            clear_window(components_border, "");
+            clear_window(properties, "");
+            clear_window(properties_border, "");
+
+            delwin(components_border);
+            delwin(components_win);
+            delwin(properties_border);
+            delwin(properties);
+            refresh();
+
+        } else if (choice == 3){
+            clear_window(command, "|Do you want to save created form?");
+            char choices_exit[2][5] = {"YES", "NO"};
+            int save;
+            save = get_choice(max_x, 5, choices_exit, command, 2, max_x-7, 1, 1);
+            if (!save){
+                FILE *fpo;
+                char file_address[116] = "FormsTemplates/";
+                strcat(file_address, file_name);
+                fpo = fopen(file_address, "wb+");
+//                mvprintw(0,0,"%s", file_address);
+//                refresh();
+                save_file(components, components_n, fpo);
+            }
+
+        } else if (choice == 0) {
+            FILE *fpo;
+
+            char file_address[116] = "FormsTemplates";
+            strcat(file_address, file_name);
+            fpo = fopen(file_address, "wb+");
+
+            WINDOW *view = newwin(max_y-11, max_x-2, 4, 1);
+            WINDOW *view_border = newwin(max_y-9, max_x, 3, 0);
+
+            box(view_border, '|', '-');
+
+            wrefresh(view_border);
+            wrefresh(view);
+
+            int view_max_y, view_max_x;
+            getmaxyx(view, view_max_y, view_max_x);
+            int points[view_max_x*view_max_y][2];
+
+            clear_window(command, "");
+            wrefresh(command);
+
+            int end = 0;
+            char create_choices[5][13] = {"|TextBox|", "|Button|", "|Check Box|", "|Label|", "|Exit|"};
+
+            while (!end){
+                clear_window(command, "\0");
+
+                mvwprintw(command, 0, 0, "Please choose one to add on form.");
+
+                int option;
+                option = get_choice(max_x, 13, choices, command, 5, 48, 1, 0);
+
+                wclear(command);
+                end = process_option(option, command, view, create_choices, points);
+
+            }
+
+            save_file(components, components_n, fpo);
+
+        }
+
+    }
 
 }

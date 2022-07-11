@@ -10,22 +10,28 @@ int main() {
 
     getmaxyx(stdscr, max_y, max_x);
 
-    int program_mode = welcome_screen();
+    int program_mode = 0;
 
-    clear();
-    refresh();
+    while (program_mode != 3){
+        clear();
+        refresh();
+        program_mode = welcome_screen();
+        clear();
+        refresh();
 
-    if (!program_mode){
-        create();
+        if (program_mode == 0){
+            create();
+        }
+        else if (program_mode == 1) {
+            manage(max_y,max_x);
+        } else if (program_mode == 2){
+            edit(max_y, max_x);
+        }
+
     }
-    else if (program_mode == 1) {
-        edit(max_y, max_x);
-    } else {
-        printf("Manage Forms");
-    }
 
 
-    getchar();
+
 
     endwin();
     return 0;
