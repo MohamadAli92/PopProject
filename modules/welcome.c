@@ -1,8 +1,8 @@
-
 #include <stdio.h>
+
 #include <ncurses.h>
 
-int welcome_screen(){
+int welcome_screen() {
 
     noecho();
 
@@ -12,7 +12,7 @@ int welcome_screen(){
 
     getmaxyx(stdscr, max_y, max_x);
 
-    move( 1, (max_x/2)-4 );
+    move(1, (max_x / 2) - 4);
 
     attron(A_BOLD);
 
@@ -20,50 +20,48 @@ int welcome_screen(){
 
     attroff(A_BOLD);
 
-    init_pair(5,COLOR_YELLOW, A_NORMAL);
+    init_pair(5, COLOR_YELLOW, A_NORMAL);
 
     attron(COLOR_PAIR(5));
-    mvprintw(max_y-2, 0, "F1 = Help");
-    mvprintw(max_y-1, 0, "F2 = Adjust form size");
+    mvprintw(max_y - 2, 0, "F1 = Help");
+    mvprintw(max_y - 1, 0, "F2 = Adjust form size");
     attroff(COLOR_PAIR(5));
-
 
     refresh();
 
-    WINDOW * select_win = newwin(9, 30, (max_y/2)-4, (max_x/2)-14);
+    WINDOW * select_win = newwin(9, 30, (max_y / 2) - 4, (max_x / 2) - 14);
 
     box(select_win, '|', '-');
-    init_pair(1,COLOR_CYAN, A_NORMAL);
+    init_pair(1, COLOR_CYAN, A_NORMAL);
     wbkgdset(select_win, COLOR_PAIR(1));
-
 
     int choice;
     int highlight = 0;
     keypad(select_win, true);
 
     while (1) {
-        if (!highlight){
+        if (!highlight) {
             wattron(select_win, A_REVERSE);
             mvwprintw(select_win, 1, 1, "Create New Form");
             wattroff(select_win, A_REVERSE);
             mvwprintw(select_win, 3, 1, "Manage Forms");
             mvwprintw(select_win, 5, 1, "Edit Form");
             mvwprintw(select_win, 7, 1, "Quit");
-        } else if (highlight == 1){
+        } else if (highlight == 1) {
             mvwprintw(select_win, 1, 1, "Create New Form");
             wattron(select_win, A_REVERSE);
             mvwprintw(select_win, 3, 1, "Manage Forms");
             wattroff(select_win, A_REVERSE);
             mvwprintw(select_win, 5, 1, "Edit Form");
             mvwprintw(select_win, 7, 1, "Quit");
-        } else if (highlight == 2){
+        } else if (highlight == 2) {
             mvwprintw(select_win, 1, 1, "Create New Form");
             mvwprintw(select_win, 3, 1, "Manage Forms");
             wattron(select_win, A_REVERSE);
             mvwprintw(select_win, 5, 1, "Edit Form");
             wattroff(select_win, A_REVERSE);
             mvwprintw(select_win, 7, 1, "Quit");
-        } else if (highlight == 3){
+        } else if (highlight == 3) {
             mvwprintw(select_win, 1, 1, "Create New Form");
             mvwprintw(select_win, 3, 1, "Manage Forms");
             mvwprintw(select_win, 5, 1, "Edit Form");
@@ -97,6 +95,5 @@ int welcome_screen(){
 
     keypad(select_win, false);
     return highlight;
-
 
 }
