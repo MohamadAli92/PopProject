@@ -61,16 +61,16 @@ int get_choice(int max_x, size_t str_max_len, char choices[][str_max_len], WINDO
     return highlight;
 }
 
-void save_file(component* components, int components_n, FILE* fp){
+void save_file(component* components, int *components_n, FILE* fp){
     component file_data;
     file_data.x_pos = -1;
     file_data.y_pos = -1;
-    file_data.width = components_n;
-    for (int i = components_n; i > 0 ; --i) {
+    file_data.width = (*components_n);
+    for (int i = (*components_n); i > 0 ; --i) {
         components[i] = components[i-1];
     }
     components[0] = file_data;
-    fwrite(components, sizeof(component), components_n+1, fp);
+    fwrite(components, sizeof(component), (*components_n)+1, fp);
     fclose(fp);
 }
 
@@ -100,7 +100,7 @@ int open_file(char* file_name, component *components, int step){
             fread(&my_comp, sizeof(component), 1, fp);
             components[i] = my_comp;
         }
-
+        fclose(fp);
         return 0;
     }
 }

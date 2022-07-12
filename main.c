@@ -26,6 +26,8 @@ int main() {
             manage(max_y,max_x);
         } else if (program_mode == 2){
             edit(max_y, max_x);
+        } else if (program_mode == -2){
+            adjust();
         }
 
     }

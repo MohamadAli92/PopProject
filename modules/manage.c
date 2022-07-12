@@ -147,27 +147,31 @@ int select_component(int components_n, WINDOW *components_win, WINDOW *propertie
 void get_add_data(WINDOW *command, form_data *data){
     curs_set(1);
     echo();
-    clear_window(command, "Please enter your data : ");
-    wscanw(command, "%s", data->data);
+    keypad(command, TRUE);
+    if (data->type == 't'){
+        clear_window(command, "Please enter your data : ");
+        wgetstr(command, data->data);
+    } else if (data->type == 'c'){
+        if (strcmp(data->data, "Checked") == 0){
+            strcpy(data->data, "Unchecked");
+        } else {
+            strcpy(data->data, "Checked");
+        }
+    }
     clear_window(command, "");
     curs_set(0);
+    keypad(command, FALSE);
     noecho();
 }
 
 void save_form_data(form_data *all_data, form_data **all_forms, int components_n, int forms_n){
-//    for (int i = components_n; i > 0; --i) {
-//        all_data[i] = all_data[i-1];
-//    }
-//    char num[10];
-//    sprintf(num, "%d", forms_n);
-//    strcpy(all_data[0].data, num);
     for (int i = 0; i < components_n; ++i) {
         all_forms[forms_n][i].type = all_data[i].type;
         strcpy(all_forms[forms_n][i].data, all_data[i].data);
     }
 }
 
-int add_new_form(int max_y, int max_x, component *components, int components_n, WINDOW *command, WINDOW* command_border, form_data *all_data, form_data **all_forms, int forms_n, int f_type){
+int add_new_form(int max_y, int max_x, component *components, int components_n, WINDOW *command, WINDOW* command_border, form_data *all_data, form_data **all_forms, int *forms_n, int f_type){
     int return_num;
     keypad(command, true);
 
@@ -243,7 +247,8 @@ int add_new_form(int max_y, int max_x, component *components, int components_n, 
             get_add_data(command, (&all_data[component_idx]) );
         } else if (end == -1){
             if (f_type == 0){
-                save_form_data(all_data, all_forms, components_n, forms_n);
+                save_form_data(all_data, all_forms, components_n, *forms_n);
+                (*forms_n)++;
             }
             return_num = -1;
             break;
@@ -284,7 +289,7 @@ void save_forms_to_file(form_data **all_forms, char* file_name, int forms_n, int
     fp = fopen(file_address, "wb+");
 
     form_data file_data_container;
-    file_data_container.type = forms_n-1;
+    file_data_container.type = forms_n;
 
     fwrite(&file_data_container, sizeof(form_data), 1, fp);
     for (int i = 0; i < forms_n; ++i) {
@@ -417,7 +422,7 @@ int select_form_func(int forms_n, WINDOW *components_win, WINDOW *properties, fo
 int search_for_forms(form_data *search_form, form_data **all_forms, int form_indexes[], int components_n, int forms_n){
     int idx = 0;
     int is_same = 1;
-    for (int j = 0; j < forms_n-1; ++j) {
+    for (int j = 0; j < forms_n; ++j) {
         is_same = 1;
         int res;
         for (int i = 0; i < components_n; ++i) {
@@ -435,19 +440,19 @@ int search_for_forms(form_data *search_form, form_data **all_forms, int form_ind
             idx++;
         }
     }
-    move(0,0);
-    for (int i = 0; i < idx; ++i) {
-        printw("%d", form_indexes[i]);
-    }
+//    move(0,0);
+//    for (int i = 0; i < idx; ++i) {
+//        printw("%d", form_indexes[i]);
+//    }
     return idx;
 }
 
 void delete_form(int form_idx, form_data **all_forms, int *forms_n){
-    free(all_forms[form_idx]);
-    for (int i = form_idx; i < (*forms_n)-1; ++i) {
+    for (int i = form_idx; i < (*forms_n)+1; ++i) {
         all_forms[i] = all_forms[i+1];
     }
-    (*forms_n)--;
+    if ((*forms_n) > 0)
+        (*forms_n)--;
 }
 
 void edit_form(form_data *all_data, WINDOW *command, int max_y, int max_x, int components_n, component *components){
@@ -508,11 +513,11 @@ void manage(int max_y, int max_x){
 
     getmaxyx(stdscr, max_y, max_x);
 
-    move(1, (max_x/2)-4);
+    move(1, (max_x/2)-5);
 
     attron(A_BOLD);
 
-    printw("Edit Form");
+    printw("Manage Forms");
     attroff(A_BOLD);
 
     refresh();
@@ -535,11 +540,13 @@ void manage(int max_y, int max_x){
 
     while (1){
 
+        keypad(command, TRUE);
+
         // get file name from user
 
         curs_set(1);
         mvwprintw(command, 0, 0, "Please enter form's name : ");
-        wscanw(command, "%s", file_name);
+        wgetstr(command, file_name);
         strcat(file_name, ".txt");
 
 
@@ -549,11 +556,16 @@ void manage(int max_y, int max_x){
         if ( (res = strcmp(file_name, ".txt") )){
             components_n = open_file(file_name, components, 0);
 
-            components = realloc(components, components_n * sizeof(component) );
+            if (components_n != 0){
+                components = realloc(components, components_n * sizeof(component) );
 
-            // step 1 : getting components list
+                // step 1 : getting components list
 
-            open_file(file_name, components, 1);
+                open_file(file_name, components, 1);
+            } else {
+                res = 0;
+            }
+
 
         }
 
@@ -561,7 +573,7 @@ void manage(int max_y, int max_x){
             curs_set(0);
             init_pair(1, COLOR_YELLOW, A_NORMAL);
             wattron(command, COLOR_PAIR(1));
-            clear_window(command, "File not found;\nPlease try again.");
+            clear_window(command, "File not found or it's an empty form;\nPlease try again.");
             wattroff(command, COLOR_PAIR(1));
             wrefresh(command);
             sleep(2);
@@ -574,6 +586,8 @@ void manage(int max_y, int max_x){
         }
     }
 
+    keypad(command, FALSE);
+
     curs_set(0);
     init_pair(1, COLOR_GREEN, A_NORMAL);
     wattron(command, COLOR_PAIR(1));
@@ -584,11 +598,23 @@ void manage(int max_y, int max_x){
 
     noecho();
 
+    attron(A_BOLD);
+    attron(A_ITALIC);
+    attron(A_REVERSE);
     mvprintw(0,0, "%s", file_name);
     refresh();
-
+    attroff(A_REVERSE);
+    attroff(A_ITALIC);
+    attroff(A_BOLD);
 
     // Open data file
+
+    struct stat st = {0};
+
+    if (stat("FormsData", &st) == -1) {
+        mkdir("FormsData", 0700);
+    }
+
     char file_address[116];
     sprintf(file_address, "FormsData/%s", file_name);
     form_data file_data_container;
@@ -607,9 +633,29 @@ void manage(int max_y, int max_x){
         forms_n = 0;
     } else {
         fread(&file_data_container, sizeof(form_data), 1, data_file);
-        forms_n = file_data_container.type + 1;
+        forms_n = file_data_container.type;
         for (int i = 0; i < forms_n; ++i) {
             fread(all_forms[i], sizeof(form_data)*(components_n+1), 1, data_file);
+            for (int j = 0; j < components_n; ++j) {
+                form_data checking_data = all_forms[i][j];
+                if (checking_data.type != 't' && checking_data.type != 'c' && checking_data.type != 'b' && checking_data.type != 'l'){
+                    if (components[j].width == -1 && components[j].height == -1){
+                        if (components[j].checked == -5){
+                            // button
+                            all_forms[i][j].type = 'b';
+                        } else if (components[j].checked == -1) {
+                            // Label
+                            all_forms[i][j].type = 'l';
+                        } else {
+                            // CheckBox
+                            all_forms[i][j].type = 'c';
+                        }
+                    } else if (components[j].checked == -1){
+                        // TextBox
+                        all_forms[i][j].type = 't';
+                    }
+                }
+            }
         }
     }
 
@@ -628,94 +674,115 @@ void manage(int max_y, int max_x){
 
             clear_window(command, "Press enter on a component to add data or press backspace to discard or CTRL+S to save form.");
             cbreak();
-            add_new_form(max_y, max_x, components, components_n, command, command_border, all_data, all_forms, forms_n, 0);
-            forms_n++;
-//            cbreak();
+            add_new_form(max_y, max_x, components, components_n, command, command_border, all_data, all_forms, &forms_n, 0);
         } else if (choice == 2){
             clear_window(command, "Do you want to save changes?");
             char choices_exit[2][5] = {"YES", "NO"};
             int save = get_choice(max_x, 5, choices_exit, command, 2, max_x-7, 1, 0);
-            if (!save)
+            fclose(data_file);
+            if (!save){
                 save_forms_to_file(all_forms, file_name, forms_n, components_n);
+            }
         } else if (choice == 1){
-            form_data *search_form = malloc((components_n)*sizeof(form_data));
-            clear_window(command, "Please press enter on any component to fill it with desired data and"
-                                  " then press SPACE to search for forms.");
-            int search_cond = add_new_form(max_y, max_x, components, components_n, command, command_border, search_form, all_forms, forms_n, 1);
-            // should search
-            if (search_cond == -1){
+            if (forms_n == 0){
+                init_pair(1, COLOR_YELLOW, A_NORMAL);
+                wattron(command, COLOR_PAIR(1));
+                clear_window(command, "There isn't any form to search for;\nPlease first add forms.");
+                wattroff(command, COLOR_PAIR(1));
+                wrefresh(command);
+                sleep(2);
+                clear_window(command, "");
+                wrefresh(command);
+            } else {
+                form_data *search_form = malloc((components_n)*sizeof(form_data));
+                clear_window(command, "Please press enter on any component to fill it with desired data and"
+                                      " then press SPACE to search for forms.");
+                int search_cond = add_new_form(max_y, max_x, components, components_n, command, command_border, search_form, all_forms, &forms_n, 1);
+                // should search
+                if (search_cond == -1){
 
-                int form_indexes[1000];
-
-
-                int searched_forms_n = search_for_forms(search_form, all_forms, form_indexes, components_n, forms_n);
-
-
-                form_data **all_searched_forms = malloc(searched_forms_n*sizeof(form_data*));
-                for (int i = 0; i < searched_forms_n; ++i) {
-                    all_searched_forms[i] = malloc((components_n+1)*sizeof(form_data));
-                    all_searched_forms[i] = all_forms[form_indexes[i]];
-                }
-
-                WINDOW *components_border = newwin(max_y-7, (max_x)/2, 3, 0);
-                WINDOW *components_win = newwin(max_y-9, (max_x/2)-2, 4, 1);
-
-                WINDOW *properties_border = newwin(max_y-7, max_x/2, 3, max_x/2);
-                WINDOW *properties = newwin(max_y-9 , (max_x/2)-2, 4, (max_x/2)+1);
+                    int form_indexes[1000];
 
 
-                int deleting_forms[1000];
-                int deleting_n = 0;
+                    int searched_forms_n = search_for_forms(search_form, all_forms, form_indexes, components_n, forms_n);
 
-                while (1){
-                    clear_window(command, "Press Enter on forms to delete or F1 to edit or BACKSPACE to discard and space to save changes.");
-                    wborder(components_border, 0, '|', 0, '-', 0, 0, 0, 0);
-                    wborder(properties_border, '|', 0, 0, '-', 0, 0, 0, 0);
-                    wborder(command_border, 0, 0, '-', 0, 0, 0, 0, 0);
 
-                    wattron(components_border, A_BOLD | A_REVERSE);
-                    wattron(properties_border, A_BOLD | A_REVERSE);
+                    form_data **all_searched_forms = malloc(searched_forms_n*sizeof(form_data*));
+                    for (int i = 0; i < searched_forms_n; ++i) {
+                        all_searched_forms[i] = malloc((components_n+1)*sizeof(form_data));
+                        all_searched_forms[i] = all_forms[form_indexes[i]];
+                    }
 
-                    mvwprintw(components_border, 0, 1, "Forms: ");
-                    mvwprintw(properties_border, 0, 1, "Components: ");
+                    WINDOW *components_border = newwin(max_y-7, (max_x)/2, 3, 0);
+                    WINDOW *components_win = newwin(max_y-9, (max_x/2)-2, 4, 1);
 
-                    wattroff(properties_border, A_BOLD | A_REVERSE);
-                    wattroff(components_border, A_BOLD | A_REVERSE);
+                    WINDOW *properties_border = newwin(max_y-7, max_x/2, 3, max_x/2);
+                    WINDOW *properties = newwin(max_y-9 , (max_x/2)-2, 4, (max_x/2)+1);
 
-                    wrefresh(components_border);
-                    wrefresh(properties_border);
 
-                    int end;
-                    int selected_form;
+                    int deleting_forms[1000];
+                    int deleting_n = 0;
 
-                    end = select_form_func(searched_forms_n, components_win, properties, all_searched_forms, &selected_form, components_n, components, form_indexes, deleting_forms, deleting_n);
+                    while (1){
+                        clear_window(command, "Press Enter on forms to delete or F1 to edit or BACKSPACE to discard and space to save changes.");
+                        wborder(components_border, 0, '|', 0, '-', 0, 0, 0, 0);
+                        wborder(properties_border, '|', 0, 0, '-', 0, 0, 0, 0);
+                        wborder(command_border, 0, 0, '-', 0, 0, 0, 0, 0);
 
-                    if (end == 0){
-                        deleting_forms[deleting_n] = form_indexes[selected_form];
-                        deleting_n++;
-                    } else if (end == -1){
-                        for (int i = 0; i < deleting_n; ++i) {
-                            delete_form(deleting_forms[i], all_forms, &forms_n);
+                        wattron(components_border, A_BOLD | A_REVERSE);
+                        wattron(properties_border, A_BOLD | A_REVERSE);
+
+                        mvwprintw(components_border, 0, 1, "Forms: ");
+                        mvwprintw(properties_border, 0, 1, "Components: ");
+
+                        wattroff(properties_border, A_BOLD | A_REVERSE);
+                        wattroff(components_border, A_BOLD | A_REVERSE);
+
+                        wrefresh(components_border);
+                        wrefresh(properties_border);
+
+                        int end;
+                        int selected_form;
+
+                        end = select_form_func(searched_forms_n, components_win, properties, all_searched_forms, &selected_form, components_n, components, form_indexes, deleting_forms, deleting_n);
+
+                        if (end == 0){
+                            int check_if_exist = 0;
+                            for (int i = 0; i < deleting_n; ++i) {
+                                if (selected_form == deleting_forms[i]){
+                                    check_if_exist = 1;
+                                    break;
+                                }
+                            }
+                            if (check_if_exist == 0){
+                                deleting_forms[deleting_n] = form_indexes[selected_form];
+                                deleting_n++;
+                            }
+                        } else if (end == -1){
+                            for (int i = deleting_n-1; i >= 0; --i) {
+                                delete_form(deleting_forms[i], all_forms, &forms_n);
+                            }
+                            break;
                         }
-                        break;
+                        else if (end == -2){
+                            edit_form(all_forms[form_indexes[selected_form]], command, max_y, max_x, components_n, components);
+                        } else {
+                            break;
+                        }
                     }
-                    else if (end == -2){
-                        edit_form(all_forms[form_indexes[selected_form]], command, max_y, max_x, components_n, components);
-                    } else {
-                        break;
-                    }
+
+                    clear_window(components_win, "");
+                    clear_window(components_border, "");
+                    clear_window(properties, "");
+                    clear_window(properties_border, "");
+
+                    delwin(components_border);
+                    delwin(components_win);
+                    delwin(properties_border);
+                    delwin(properties);
+                    refresh();
+
                 }
-
-                clear_window(components_win, "");
-                clear_window(components_border, "");
-                clear_window(properties, "");
-                clear_window(properties_border, "");
-
-                delwin(components_border);
-                delwin(components_win);
-                delwin(properties_border);
-                delwin(properties);
-                refresh();
 
             }
 

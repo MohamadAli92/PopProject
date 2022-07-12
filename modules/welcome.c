@@ -4,19 +4,29 @@
 
 int welcome_screen(){
 
+    noecho();
+
     curs_set(0);
 
     int max_y, max_x;
 
     getmaxyx(stdscr, max_y, max_x);
 
-    move( 1, (max_x/2)-11 );
+    move( 1, (max_x/2)-4 );
 
     attron(A_BOLD);
 
-    printw("Welcome to form maker :)");
+    printw("Form Maker");
 
     attroff(A_BOLD);
+
+    init_pair(5,COLOR_YELLOW, A_NORMAL);
+
+    attron(COLOR_PAIR(5));
+    mvprintw(max_y-2, 0, "F1 = Help");
+    mvprintw(max_y-1, 0, "F2 = Adjust form size");
+    attroff(COLOR_PAIR(5));
+
 
     refresh();
 
@@ -26,8 +36,6 @@ int welcome_screen(){
     init_pair(1,COLOR_CYAN, A_NORMAL);
     wbkgdset(select_win, COLOR_PAIR(1));
 
-//    mvwprintw(select_win, 2, 7, "Create New Form");
-//    mvwprintw(select_win, 4, 9, "Manage Forms");
 
     int choice;
     int highlight = 0;
@@ -81,34 +89,14 @@ int welcome_screen(){
                 break;
         }
         if (choice == '\n') break;
+        if (choice == KEY_F(2)) {
+            keypad(select_win, false);
+            return -2;
+        }
     }
 
     keypad(select_win, false);
     return highlight;
-//    wrefresh(select_win);
-//    touchwin(select_win);
-
-
-
-//    WINDOW * title_win = newwin(1, 24, max_y/4, max_x/4);
-//
-//    box(title_win, '-', '-');
-//
-//    wprintw(title_win, "Welcome to form maker :)");
-//
-//    refresh();
-
-    //    char bo = '-';
-//
-//    wborder(title_win, bo, bo, bo, bo, bo, bo, bo, bo);
-//
-//    refresh();
-//
-//    wprintw(title_win, "Welcome to form maker :)");
-//
-//    wrefresh(title_win);
-//
-//    printf("Hi");
 
 
 }

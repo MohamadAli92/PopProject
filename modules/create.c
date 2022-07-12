@@ -11,17 +11,18 @@ int view_max_x, view_max_y;
 FILE *fp;
 char file_address[116];
 
-component* components;
-int components_n = 0;
-int n_point = 0;
 
 
 void make_new_file(WINDOW *win){
-    char file_name[100];
+    char file_name[1000] = {0};
     curs_set(1);
     echo();
-    mvwprintw(win, 0, 0, "Please enter the name of form (maximum 100 character) : ");
-    wgetstr(win, file_name);
+    keypad(win, TRUE);
+    do {
+        clear_window(win, "Please enter the name of form (maximum 100 character) : ");
+        wgetstr(win, file_name);
+    } while (strlen(file_name) > 100);
+    keypad(win, FALSE);
     struct stat st = {0};
 
     if (stat("FormsTemplates", &st) == -1) {
@@ -56,6 +57,15 @@ void make_new_file(WINDOW *win){
     }
 
     fp = fopen(file_address, "wb+");
+
+    attron(A_BOLD);
+    attron(A_ITALIC);
+    attron(A_REVERSE);
+    mvprintw(0,0, "%s", file_name);
+    refresh();
+    attroff(A_REVERSE);
+    attroff(A_ITALIC);
+    attroff(A_BOLD);
 
     curs_set(0);
 
@@ -105,7 +115,7 @@ void put_component_on_view(int type, component created_component, WINDOW *win){
     }
 }
 
-int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13], int points[][2]){
+int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13], int points[][2], int *n_point, int *components_n, component* components){
 
     int confirmed_component = 0;
     component created_component;
@@ -114,29 +124,46 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
     int total_width;
 
     while (!confirmed_component && option != 4){
-        clear_window(command, choices[option]);
+
+        keypad(command, TRUE);
 
         echo();
 
-        mvwprintw(command, 1, 0, "|Label text (maximum 20 characters) : ");
         curs_set(1);
-        wgetstr(command, created_component.label_text);
+
+        do {
+            clear_window(command, choices[option]);
+            mvwprintw(command, 1, 0, "|Label text (maximum 20 characters) : ");
+            wgetstr(command, created_component.label_text);
+        } while (strlen(created_component.label_text) > 20);
+
+        do {
+            clear_window(command, choices[option]);
+            mvwprintw(command, 1, 0, "|X Position (only number and maximum %d) : ", view_max_x);
+            wscanw(command, "%d", &created_component.x_pos);
+        } while (created_component.x_pos >= view_max_x || created_component.x_pos < 0);
+
+        do {
+            clear_window(command, choices[option]);
+            mvwprintw(command, 1, 0, "|Y Position (only number and maximum %d) : ", view_max_y);
+            wscanw(command, "%d", &created_component.y_pos);
+        } while (created_component.y_pos >= view_max_y || created_component.y_pos < 0);
+
         clear_window(command, choices[option]);
-        mvwprintw(command, 1, 0, "|X Position (only number and maximum %d) : ", max_x);
-        wscanw(command, "%d", &created_component.x_pos);
-        clear_window(command, choices[option]);
-        mvwprintw(command, 1, 0, "|Y Position (only number and maximum %d) : ", max_y);
-        wscanw(command, "%d", &created_component.y_pos);
-        clear_window(command, choices[option]);
+
         if (option == 0){
 
             // TextBox
 
             created_component.checked = -1;
+            do {
+                clear_window(command, choices[option]);
+                mvwprintw(command, 1, 0, "|Width & Height of textbox (only numbers and maximums are %d & %d) : ", view_max_x-created_component.x_pos-2, view_max_y-created_component.y_pos-2);
+                wscanw(command, "%d %d", &created_component.width, &created_component.height);
+            } while (created_component.width > view_max_x-created_component.x_pos-2 || created_component.height > view_max_y-created_component.y_pos-2);
 
-            mvwprintw(command, 1, 0, "|Width & Height of textbox (only numbers and maximums are %d & %d) : ", max_x - (int)strlen(created_component.label_text), max_y-9);
-            wscanw(command, "%d %d", &created_component.width, &created_component.height);
             clear_window(command, choices[option]);
+
             mvwprintw(command, 0, 0, "label : %s | x_pos : %d | y_pos : %d | Width : %d | Height : %d", created_component.label_text, created_component.x_pos, created_component.y_pos, created_component.width, created_component.height);
 
             total_height = created_component.height+2;
@@ -146,6 +173,8 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
         else if (option == 2){
 
             // CheckBox
+
+            keypad(command, FALSE);
 
             created_component.width = -1;
             created_component.height = -1;
@@ -202,7 +231,7 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
         }
 
 
-        for (int i = 0; i < n_point; ++i) {
+        for (int i = 0; i < *n_point; ++i) {
             for (int j = 0; j < c_p_n; ++j) {
                 is_in_lines = 0;
                 is_in_cols = 0;
@@ -230,13 +259,16 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
         } else overlapped = 0;
 
         if (!overlapped){
+            keypad(command, FALSE);
             mvwprintw(command, 1, 0, "Do you want to create this component?\n ");
             char choices_exit[2][5] = {"YES", "NO"};
             confirmed_component = !( get_choice(max_x, 5, choices_exit, command, 2, max_x-7, 2, 1) );
-            for (int i = 0; i < c_p_n; ++i) {
-                points[n_point][0] = component_points[i][0];
-                points[n_point][1] = component_points[i][1];
-                n_point++;
+            if (confirmed_component){
+                for (int i = 0; i < c_p_n; ++i) {
+                    points[*n_point][0] = component_points[i][0];
+                    points[*n_point][1] = component_points[i][1];
+                    (*n_point)++;
+                }
             }
         }
 
@@ -248,8 +280,8 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
 
     // Add component to the array
     if (option != 4){
-        components[components_n] = created_component;
-        components_n++;
+        components[*components_n] = created_component;
+        (*components_n)++;
     }
 
 
@@ -263,7 +295,7 @@ int process_option(int option, WINDOW *command, WINDOW *view, char choices[][13]
         if (!save){
             save_file(components, components_n, fp);
         } else {
-//            delete_file();
+            remove(file_address);
         }
         return 1;
     }
@@ -304,9 +336,13 @@ void create(){
 
     getmaxyx(view, view_max_y, view_max_x);
     int points[view_max_x*view_max_y][2];
+    int n_point = 0;
 
     int end = 0;
     char choices[5][13] = {"|TextBox|", "|Button|", "|Check Box|", "|Label|", "|Exit|"};
+
+    component* components;
+    int components_n = 0;
 
     components = malloc(100 * sizeof(component));
 
@@ -319,7 +355,7 @@ void create(){
         option = get_choice(max_x, 13, choices, command, 5, 48, 2, 0);
 
         wclear(command);
-        end = process_option(option, command, view, choices, points);
+        end = process_option(option, command, view, choices, points, &n_point, &components_n, components);
 
     }
 
