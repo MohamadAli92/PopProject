@@ -259,13 +259,14 @@ int add_component_func(int option, WINDOW * command, WINDOW * view, char choices
 
             curs_set(0);
             noecho();
-            mvwprintw(command, 1, 0, "Is checkbox ,checked by default?\n ");
+            clear_window(command, "");
+            mvwprintw(command, 0, 0, "Is checkbox ,checked by default?\n ");
             char choices_exit[2][5] = {
                     "YES",
                     "NO"
             };
-            created_component.checked = get_choice(max_x, 5, choices_exit, command, 2, max_x - 7, 2, 1);
-            clear_window(command, choices[option]);
+            created_component.checked = get_choice(max_x, 5, choices_exit, command, 2, max_x - 7, 1, 1);
+            clear_window(command, "");
             mvwprintw(command, 0, 0, "label : %s | x_pos : %d | y_pos : %d | Checked by default : %s", created_component.label_text, created_component.x_pos, created_component.y_pos, !created_component.checked ? "YES" : "NO");
 
             total_height = 3;
@@ -405,8 +406,12 @@ void edit(int max_y, int max_x) {
 
         keypad(command, TRUE);
         curs_set(1);
-        mvwprintw(command, 0, 0, "Please enter file name : ");
+        mvwprintw(command, 0, 0, "Please enter file name (leave blank to cancel): ");
         wgetstr(command, file_name);
+        if (strcmp(file_name, "") == 0){
+            free(components);
+            return;
+        }
         strcat(file_name, ".txt");
 
         // step 0 : getting components number
@@ -416,7 +421,7 @@ void edit(int max_y, int max_x) {
             components_n = open_file(file_name, components, 0);
 
             if (components_n != 0) {
-                components = realloc(components, components_n * sizeof(component));
+                components = realloc(components, 1000 * sizeof(component));
 
                 // step 1 : getting components list
 

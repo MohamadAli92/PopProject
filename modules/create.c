@@ -16,7 +16,7 @@ int view_max_x, view_max_y;
 FILE * fp;
 char file_address[116];
 
-void make_new_file(WINDOW * win) {
+int make_new_file(WINDOW * win) {
     char file_name[1000] = {
             0
     };
@@ -24,8 +24,11 @@ void make_new_file(WINDOW * win) {
     echo();
     keypad(win, TRUE);
     do {
-        clear_window(win, "Please enter the name of form (maximum 100 character) : ");
+        clear_window(win, "Please enter the name of form (maximum 100 characters or blank to cancel): ");
         wgetstr(win, file_name);
+        if (strcmp(file_name, "") == 0){
+            return -1;
+        }
     } while (strlen(file_name) > 100);
     keypad(win, FALSE);
     struct stat st = {
@@ -55,8 +58,11 @@ void make_new_file(WINDOW * win) {
             clear_window(win, "");
             curs_set(1);
             echo();
-            mvwprintw(win, 0, 0, "Please enter the name of form (maximum 100 character) : ");
+            clear_window(win, "Please enter the name of form (maximum 100 characters or blank to cancel): ");
             wgetstr(win, file_name);
+            if (strcmp(file_name, "") == 0){
+                return -1;
+            }
             strcat(file_name, ".txt");
             sprintf(file_address, "FormsTemplates/%s", file_name);
             fp = fopen(file_address, "rb+");
@@ -77,6 +83,7 @@ void make_new_file(WINDOW * win) {
 
     curs_set(0);
 
+    return 0;
 }
 
 void put_component_on_view(int type, component created_component, WINDOW * win) {
@@ -340,7 +347,10 @@ void create() {
     wrefresh(command_border);
     wrefresh(command);
 
-    make_new_file(command);
+    int exit = make_new_file(command);
+    if (exit == -1){
+        return;
+    }
     clear_window(command, "\0");
 
     getmaxyx(view, view_max_y, view_max_x);

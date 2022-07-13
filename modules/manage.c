@@ -541,6 +541,10 @@ void manage(int max_y, int max_x) {
         curs_set(1);
         mvwprintw(command, 0, 0, "Please enter form's name : ");
         wgetstr(command, file_name);
+        if (strcmp(file_name, "") == 0){
+            free(components);
+            return;
+        }
         strcat(file_name, ".txt");
 
         // step 0 : getting components number
@@ -626,8 +630,17 @@ void manage(int max_y, int max_x) {
     } else {
         fread( & file_data_container, sizeof(form_data), 1, data_file);
         forms_n = file_data_container.type;
+        int prv_comps_n = 0;
+        form_data chk_data;
+        chk_data.type = 1;
+        while ( chk_data.type != 0){
+            fread(&chk_data, sizeof(form_data), 1, data_file);
+            prv_comps_n++;
+        }
+        fseek(data_file, 0, SEEK_SET);
+        fread( & file_data_container, sizeof(form_data), 1, data_file);
         for (int i = 0; i < forms_n; ++i) {
-            fread(all_forms[i], sizeof(form_data) * (components_n + 1), 1, data_file);
+            fread(all_forms[i], sizeof(form_data) * (prv_comps_n), 1, data_file);
             for (int j = 0; j < components_n; ++j) {
                 form_data checking_data = all_forms[i][j];
                 if (checking_data.type != 't' && checking_data.type != 'c' && checking_data.type != 'b' && checking_data.type != 'l') {
@@ -641,10 +654,18 @@ void manage(int max_y, int max_x) {
                         } else {
                             // CheckBox
                             all_forms[i][j].type = 'c';
+                            if (components[j].checked == 0){
+                                strcpy(all_forms[i][j].data, "Checked");
+                            } else if (components[j].checked == 1){
+                                strcpy(all_forms[i][j].data, "Unchecked");
+                            }
                         }
                     } else if (components[j].checked == -1) {
                         // TextBox
                         all_forms[i][j].type = 't';
+                        if (j >= prv_comps_n){
+                            strcpy(all_forms[i][j].data, "");
+                        }
                     }
                 }
             }
@@ -743,15 +764,22 @@ void manage(int max_y, int max_x) {
 
                         if (end == 0) {
                             int check_if_exist = 0;
+                            int prv_idx;
                             for (int i = 0; i < deleting_n; ++i) {
-                                if (selected_form == deleting_forms[i]) {
+                                if (form_indexes[selected_form] == deleting_forms[i]) {
                                     check_if_exist = 1;
+                                    prv_idx = i;
                                     break;
                                 }
                             }
                             if (check_if_exist == 0) {
                                 deleting_forms[deleting_n] = form_indexes[selected_form];
                                 deleting_n++;
+                            } else {
+                                for (int i = prv_idx; i < deleting_n; ++i) {
+                                    deleting_forms[i] = deleting_forms[i+1];
+                                }
+                                deleting_n--;
                             }
                         } else if (end == -1) {
                             for (int i = deleting_n - 1; i >= 0; --i) {
