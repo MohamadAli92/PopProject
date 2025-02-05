@@ -16,7 +16,7 @@ This project doesn’t have a GUI interface but I have used ncurses to develop a
 
     You can choose what to do from main menu using arrow keys.
 
-![](./screenshots/1.png)
+![](./Screenshots/1.png)
 
 It's recommended to make program by Cmake so, for compiling on unix based operation systems by cmake run commands respectively:
 
