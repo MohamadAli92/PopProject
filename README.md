@@ -55,7 +55,6 @@ make
     In every page at first you should specify a form's name wheter for saving or opening it.
 
 ![](./Screenshots/3.png)
-
     You can design a form using three different elements, you could specify each element's specification and you could also edit them later in Edit Form page.
 
 ![](./Screenshots/4.png)
@@ -74,6 +73,7 @@ make
 
     Here you can do the magic, you could delete or add any component to the Form and then view the form.
 
+![](./Screenshots/7.png)
 
 **Note that the program would make two FormsTemplates and FormsData directories where it has been built;**
 
