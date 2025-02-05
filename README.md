@@ -10,13 +10,18 @@ This project doesn’t have a GUI interface but I have used ncurses to develop a
 
     This application has 3 functionalities:
 
-1.  Create form templates
-2.  Manage and fill out different samples of form templates.
-3.  Edit both templates and filled out forms.
+        1.  Create form templates
+        2.  Manage and fill out different samples of form templates.
+        3.  Edit both templates and filled out forms.
 
     You can choose what to do from main menu using arrow keys.
 
 ![](./Screenshots/1.png)
+
+    **Note:** You can adjust form size by pressing F2 button and using an interactive interface which has implemented using a TUI interface :).
+
+![](./Screenshots/2.png)
+
 
 It's recommended to make program by Cmake so, for compiling on unix based operation systems by cmake run commands respectively:
 
