@@ -18,7 +18,9 @@ This project doesn’t have a GUI interface but I have used ncurses to develop a
 
 ![](./Screenshots/1.png)
 
-    **Note:** You can adjust form size by pressing F2 button and using an interactive interface which has implemented using a TUI interface :).
+-   **Note:**
+
+    You can adjust form size by pressing F2 button and using an interactive interface which has implemented using a TUI interface :).
 
 ![](./Screenshots/2.png)
 
